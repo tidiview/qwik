@@ -175,10 +175,10 @@ export interface QComponent<PROPS extends {} = any, STATE extends {} = any> exte
     styleClass: string | null;
     // (undocumented)
     styleHostClass: string | null;
-    // Warning: (ae-forgotten-export) The symbol "QrlStyles" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "QStyles" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    styles: QrlStyles<any> | null;
+    styles: QStyles<any> | null;
     // (undocumented)
     tag: string;
 }
@@ -192,7 +192,7 @@ export function qComponent<PROPS = {}, STATE = {}>({ onRender, styles, tagName, 
     onDehydrate?: QHook<PROPS, STATE, undefined, void> | null;
     onHydrate?: QHook<PROPS, STATE, undefined, void> | null;
     onResume?: QHook<PROPS, STATE, undefined, void> | null;
-    styles?: QrlStyles<any>;
+    styles?: QStyles<any>;
     props?: PROPS;
 }): QComponent<PROPS, STATE>;
 

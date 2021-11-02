@@ -1,15 +1,16 @@
 import { Fragment, h, Host } from '@builder.io/qwik';
 import { ElementFixture, trigger } from '../../testing/element_fixture';
-import { expectDOM } from '../../testing/expect-dom';
+import { expectDOM } from '../../testing/expect-dom.unit';
 import { qComponent } from '../component/q-component.public';
 import { qHook } from '../component/qrl-hook.public';
-import { qrlStyles } from '../component/qrl-styles';
+import { qStyles, styleKey } from '../component/qrl-styles';
 import { TEST_CONFIG } from '../util/test_config';
 import { Async, JSXPromise, PromiseValue } from './jsx/async.public';
 import { Slot } from './jsx/slot.public';
 import { qRender } from './q-render.public';
 import { qNotifyRender } from './q-notify-render';
 import { getTestPlatform } from '../../testing/platform';
+import { prettyHtml } from '../../testing/html';
 
 describe('q-render', () => {
   let fixture: ElementFixture;
@@ -224,7 +225,7 @@ describe('q-render', () => {
         </div>
       );
       await resolve!(Promise.reject('REJECTION'));
-      await Promise.resolve('delay');
+      await new Promise((res) => setTimeout(res, 0));
       expectRendered(
         <div>
           {/<node:.*>/}
@@ -299,12 +300,13 @@ describe('q-render', () => {
       });
     });
     describe('styles', () => {
-      it('should render a component with styles', async () => {
+      it.only('should render a component with styles', async () => {
         await qRender(fixture.host, <HelloWorld name="World" />);
+        console.log(prettyHtml(fixture.host));
         expectRendered(
           <hello-world
             on:q-render={HelloWorld.onRender}
-            q:style={HelloWorld.styles as any}
+            q:style={HelloWorld_styles}
             class={HelloWorld.styleHostClass as any}
           >
             <span class={HelloWorld.styleClass as any}>
@@ -312,6 +314,10 @@ describe('q-render', () => {
             </span>
           </hello-world>
         );
+        const style = fixture.document.querySelector(
+          'style[q\\:style="' + styleKey(HelloWorld_styles) + '"]'
+        )!;
+        expect(style.textContent).toEqual('span { color: red; }');
       });
     });
   });
@@ -323,9 +329,10 @@ describe('q-render', () => {
 //////////////////////////////////////////////////////////////////////////////////////////
 // Hello World
 //////////////////////////////////////////////////////////////////////////////////////////
+const HelloWorld_styles = qStyles<any>(`span { color: red; }`);
 export const HelloWorld = qComponent<{ name?: string }, { salutation: string }>({
   tagName: 'hello-world',
-  styles: qrlStyles<any>('./mock.unit.css#ABC123'),
+  styles: HelloWorld_styles,
   onMount: qHook(() => ({ salutation: 'Hello' })),
   onRender: qHook((props, state) => {
     return (

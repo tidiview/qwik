@@ -4,9 +4,10 @@ import type { OnHookReturn } from '../props/q-props';
 import { ComponentRenderQueue, visitJsxNode } from '../render/q-render';
 import { AttributeMarker } from '../util/markers';
 import { flattenPromiseTree } from '../util/promises';
-import { QrlStyles, styleContent, styleHost } from './qrl-styles';
+import { styleContent, styleHost, styleKey } from './qrl-styles';
 import { _qObject } from '../object/q-object';
 import { qProps } from '../props/q-props.public';
+import { qImport } from '../import/qImport';
 
 // TODO(misko): Can we get rid of this whole file, and instead teach qProps to know how to render
 // the advantage will be that the render capability would then be exposed to the outside world as well.
@@ -21,10 +22,12 @@ export class QComponentCtx {
 
   constructor(hostElement: HTMLElement) {
     this.hostElement = hostElement;
-    const styleId = (this.styleId = hostElement.getAttribute(AttributeMarker.ComponentStyles));
+    const styleId = (this.styleId = styleKey(
+      hostElement.getAttribute(AttributeMarker.ComponentStyles) as any
+    )!);
     if (styleId) {
-      this.styleHostClass = styleHost(styleId as any as QrlStyles<any>);
-      this.styleClass = styleContent(styleId as any as QrlStyles<any>);
+      this.styleHostClass = styleHost(styleId);
+      this.styleClass = styleContent(styleId);
     }
   }
 
@@ -37,6 +40,22 @@ export class QComponentCtx {
     // TODO(misko): extract constant
     if (props['state:'] == null) {
       try {
+        const qStyle: string|null = props['q:style'];
+        if (qStyle) {
+          const styleId = styleKey(qStyle as any)!;
+          const document = this.hostElement.ownerDocument;
+          const head = document.querySelector('head')!;
+          if (!head.querySelector(`style[q\\:style="${styleId}"]`)) {
+            const styleImport = Promise.resolve(qImport<string>(document, qStyle));
+            styleImport.then((styles: string) => {
+              const style = document.createElement('style');
+              style.setAttribute('q:style', styleId);
+              style.textContent = styles.replace(/�/g, styleId);
+              console.log('Adding <style>');
+              head.appendChild(style);
+            });
+          }
+        }
         const hook = props['on:qMount'];
         if (hook) {
           const values: OnHookReturn[] = await hook('qMount');

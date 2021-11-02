@@ -31,6 +31,7 @@ export function qHook<COMP extends QComponent, ARGS extends {} | unknown = unkno
 export function qHook<COMP extends QComponent, ARGS extends {} | undefined = any, RET = unknown>(
   hook: (props: PropsOf<COMP>, state: StateOf<COMP>, args: ARGS) => ValueOrPromise<RET>
 ): QHook<PropsOf<COMP>, StateOf<COMP>, ARGS, RET> {
+  if (typeof hook === 'string') return hook;
   const qrlFn = async (element: HTMLElement, event: Event, url: URL) => {
     const isQwikInternalHook = typeof event == 'string';
     // isQwikInternalHook && console.log('HOOK', event, element, url);
